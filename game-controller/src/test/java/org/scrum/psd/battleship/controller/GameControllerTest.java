@@ -1,15 +1,48 @@
 package org.scrum.psd.battleship.controller;
 
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.scrum.psd.battleship.controller.dto.Letter;
 import org.scrum.psd.battleship.controller.dto.Position;
 import org.scrum.psd.battleship.controller.dto.Ship;
 
-import java.util.Arrays;
-import java.util.List;
-
+@Execution(ExecutionMode.CONCURRENT)
 public class GameControllerTest {
+
+    protected static Position parsePosition(String input) {
+        Letter letter = Letter.valueOf(input.toUpperCase().substring(0, 1));
+        int number = Integer.parseInt(input.substring(1));
+        return new Position(letter, number);
+    }
+
+    private static Stream<Arguments> provideShipPositions() {
+        return Stream.of(
+            Arguments.of(Collections.emptyList(), 3, false),
+            Arguments.of(Arrays.asList("A1", "A1", "A1"), 3, true)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideShipPositions")
+    public void testIsShipValid(List<String> positions, int size, boolean expected) {
+        Ship ship = new Ship("TestShip", size,
+            positions.stream().map(GameControllerTest::parsePosition).collect(Collectors.toList()));
+        boolean result = GameController.isShipValid(ship);
+
+        Assertions.assertEquals(expected, result);
+    }
+
     @Test
     public void testCheckIsHitTrue() {
         List<Ship> ships = GameController.initializeShips();
@@ -27,7 +60,7 @@ public class GameControllerTest {
 
         boolean result = GameController.checkIsHit(ships, new Position(Letter.A, 1));
 
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
     }
 
     @Test
@@ -47,35 +80,18 @@ public class GameControllerTest {
 
         boolean result = GameController.checkIsHit(ships, new Position(Letter.H, 1));
 
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testCheckIsHitPositstionIsNull() {
-        GameController.checkIsHit(GameController.initializeShips(), null);
+        Assertions.assertThrows(IllegalArgumentException.class, () ->
+            GameController.checkIsHit(GameController.initializeShips(), null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testCheckIsHitShipIsNull() {
-        GameController.checkIsHit(null, new Position(Letter.H, 1));
+        Assertions.assertThrows(IllegalArgumentException.class, () ->
+            GameController.checkIsHit(null, new Position(Letter.H, 1)));
     }
-
-    @Test
-    public void testIsShipValidFalse() {
-        Ship ship = new Ship("TestShip", 3);
-        boolean result = GameController.isShipValid(ship);
-
-        Assert.assertFalse(result);
-    }
-
-    @Test
-    public void testIsShipValidTrue() {
-        List<Position> positions = Arrays.asList(new Position(Letter.A, 1), new Position(Letter.A, 1), new Position(Letter.A, 1));
-        Ship ship = new Ship("TestShip", 3, positions);
-
-        boolean result = GameController.isShipValid(ship);
-
-        Assert.assertTrue(result);
-    }
-
 }
