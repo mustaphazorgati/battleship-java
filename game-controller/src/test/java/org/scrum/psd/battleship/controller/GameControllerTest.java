@@ -29,7 +29,11 @@ public class GameControllerTest {
     private static Stream<Arguments> provideShipPositions() {
         return Stream.of(
             Arguments.of(Collections.emptyList(), 3, false),
-            Arguments.of(Arrays.asList("A1", "A1", "A1"), 3, true)
+            Arguments.of(Arrays.asList("A1", "A1", "A1"), 3, false),
+            Arguments.of(Arrays.asList("A1", "A2", "A3"), 3, true),
+            Arguments.of(Arrays.asList("A1", "A4", "A3"), 3, false),
+            Arguments.of(Arrays.asList("B1", "A1", "C1"), 3, true),
+            Arguments.of(Arrays.asList("D1", "A1", "C1"), 3, false)
         );
     }
 
